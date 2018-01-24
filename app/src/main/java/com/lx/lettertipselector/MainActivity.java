@@ -1,31 +1,56 @@
 package com.lx.lettertipselector;
 
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.View;
+import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
 
     private RecyclerView mRecyclerView;
     private Adapter mAdapter;
     private LetterSelector mLetterSelector;
+    private LinearLayoutManager mLayoutManager;
+    private TextView mTipView;
+    private android.os.Handler mHandler = new Handler();
+    private Runnable mRunnable = new Runnable() {
+        @Override
+        public void run() {
+            mTipView.setVisibility(View.GONE);
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mRecyclerView = (RecyclerView) findViewById(R.id.recyclerView);
-        mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        mLayoutManager = new LinearLayoutManager(this);
+        mRecyclerView.setLayoutManager(mLayoutManager);
         mAdapter = new Adapter(this, args);
         mRecyclerView.setAdapter(mAdapter);
         mRecyclerView.addItemDecoration(new ItemDecoration(getResources().getDimensionPixelOffset(R.dimen.dp1)));
         mAdapter.notifyDataSetChanged();
+        mTipView = (TextView) findViewById(R.id.tipView);
         mLetterSelector = (LetterSelector) findViewById(R.id.letterSelector);
         mLetterSelector.setOnLetterChangedListener(new LetterSelector.OnLetterChangedListener() {
             @Override
             public void onLetterChanged(String s) {
+                mHandler.removeCallbacks(mRunnable);
+                mTipView.setText(s);
+                mTipView.setVisibility(View.VISIBLE);
+                mHandler.postDelayed(mRunnable, 500);
 
+                for (int i = 0, len = args.length; i < len; i++) {
+                    if (args[i].toLowerCase().equals(s.toLowerCase())) {
+                        mLayoutManager.scrollToPositionWithOffset(i, 0);
+                        mLayoutManager.setStackFromEnd(true);
+                        break;
+                    }
+                }
             }
         });
 
